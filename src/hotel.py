@@ -8,6 +8,9 @@ bot = telebot.TeleBot(TOKEN)
 
 
 class Hotel:
+    loc_dict = {'ru_RU': ['Рейтинг:', 'Цена:', 'От центра города', 'Адрес:'],
+                'en_US': ['Rating:', 'Price:', 'From city center', 'Адрес:']}
+
     def __init__(self):
         self.sort_order = None
         self.min_price = str
@@ -15,33 +18,26 @@ class Hotel:
         self.max_distance = 0
         self.p_size = 0
         self.currency = None
+        self.__loc = None
 
-    def get_price(self, dest_id, srt_mode, ch_id):
+    def get_hotel(self, dest_id, srt_mode, ch_id):
         date_in = str(datetime.datetime.today().date())
         date_out = str(datetime.datetime.today().date() + datetime.timedelta(days=1))
 
+        querystring = {"adults1": "1",
+                       "pageNumber": "1",
+                       "destinationId": dest_id,
+                       "checkOut": date_out,
+                       "checkIn": date_in,
+                       "sortOrder": srt_mode,
+                       "locale": self.__loc,
+                       "landmarkIds": "City center",
+                       "currency": self.currency}
+
         if self.sort_order == 'DISTANCE_FROM_LANDMARK':
-            querystring = {"adults1": "1",
-                           "pageNumber": "1",
-                           "destinationId": dest_id,
-                           "checkOut": date_out,
-                           "checkIn": date_in,
-                           "sortOrder": srt_mode,
-                           "locale": "ru_RU",
-                           "landmarkIds": "City center",
-                           "currency": self.currency,
-                           "priceMax": self.max_price,
-                           "priceMin": self.min_price}
-        else:
-            querystring = {"adults1": "1",
-                           "pageNumber": "1",
-                           "destinationId": dest_id,
-                           "checkOut": date_out,
-                           "checkIn": date_in,
-                           "sortOrder": srt_mode,
-                           "locale": "ru_RU",
-                           "landmarkIds": "City center",
-                           "currency": self.currency}
+            querystring["priceMax"] = self.max_price
+            querystring["priceMin"] = self.min_price
+
 
         querystring["pageSize"] = self.p_size
         hotel_data = req("https://hotels4.p.rapidapi.com/properties/list", querystring)
@@ -75,11 +71,15 @@ class Hotel:
                     else:
                         stars = '--'
                     text = f'<strong>{i_dict["name"]}.</strong>\n' \
-                           f'{stars} Рейтинг: {i_dict["rating"]}. Цена: <b>{i_dict["price"]}</b>.\n' \
-                           f'От центра города <b>{i_dict["center_distance"]}</b>.\n' \
-                           f'Адрес: {i_dict["address"]}, {i_dict["location"]}.'
+                           f'{stars} {self.loc_dict[self.__loc][0]} {i_dict["rating"]}.' \
+                           f' {self.loc_dict[self.__loc][1]} <b>{i_dict["price"]}</b>.\n' \
+                           f'{self.loc_dict[self.__loc][2]} <b>{i_dict["center_distance"]}</b>.\n' \
+                           f'{self.loc_dict[self.__loc][3]} {i_dict["address"]}, {i_dict["location"]}.'
                     bot.send_message(ch_id, text, parse_mode='HTML')
             else:
                 bot.send_message(ch_id, 'Нет отелей по заданным параметрам.')
         else:
             print('Нет данных о данной локации')
+
+    def set_loc(self, loc):
+        self.__loc = loc

@@ -7,7 +7,7 @@ def req(f_url, f_query):
     querystring = f_query
 
     headers = {
-        'x-rapidapi-key': "545765e222mshcffb1b8429ecff6p165b8ajsn4627ab9217ae",
+        'x-rapidapi-key': "e1b6c495d9msh331ef30bb042c1dp12c685jsn6a5c1b2e7f1b",
         'x-rapidapi-host': "hotels4.p.rapidapi.com"
     }
 
